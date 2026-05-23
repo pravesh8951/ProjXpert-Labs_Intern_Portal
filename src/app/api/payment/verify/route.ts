@@ -3,6 +3,7 @@ import crypto from "crypto";
 import connectToDatabase from "@/lib/db";
 import User from "@/models/User";
 import Payment from "@/models/Payment";
+import UserCourseProgress from "@/models/UserCourseProgress";
 import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
 import { generateToken } from "@/lib/auth";
@@ -39,6 +40,40 @@ export async function POST(req: Request) {
           user.dashboardActive = true;
           user.internshipPlan = payment.plan;
           await user.save();
+
+          // Initialize UserCourseProgress document
+          const totalDays = payment.plan === "3m" ? 90 : payment.plan === "2m" ? 60 : 30;
+          
+          let progressDoc = await UserCourseProgress.findOne({ userId: user._id });
+          if (!progressDoc) {
+            const quizProgress = Array.from({ length: totalDays }).map((_, i) => ({
+              day: i + 1,
+              completed: false,
+              score: 0,
+              totalMarks: 0,
+              percentage: 0
+            }));
+
+            const readingProgress = Array.from({ length: totalDays }).map((_, i) => ({
+              day: i + 1,
+              completed: false
+            }));
+
+            progressDoc = new UserCourseProgress({
+              userId: user._id,
+              courseId: null, // Since this uses domain based architecture currently
+              subscriptionPlan: payment.plan,
+              totalDays,
+              xp: user.xp || 0,
+              level: user.level || 1,
+              streak: user.streak || 1,
+              completedDays: user.completedDays || [],
+              unlockedDays: user.unlockedDays || [1],
+              quizProgress,
+              readingProgress
+            });
+            await progressDoc.save();
+          }
 
           // Refresh token with new paymentStatus AND preserve domain
           const newToken = generateToken(user._id.toString(), user.testStatus, user.paymentStatus, false, user.domain);

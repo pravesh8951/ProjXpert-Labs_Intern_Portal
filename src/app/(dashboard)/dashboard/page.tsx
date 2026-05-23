@@ -146,13 +146,15 @@ function DashboardContent() {
   const currentDayData = currentWeekObj?.days?.find((d: any) => d.day === user.currentDay);
   
   const totalDays = user.internshipPlan === "3m" ? 90 : user.internshipPlan === "2m" ? 60 : 30;
-  const currentDay = user.currentDay || 1;
-  const xp = user.xp || 120;
-  const level = user.level || 2;
-  const streak = user.streak || 3;
-  const assignmentsDone = user.assignmentsCompleted || 2;
-  const quizAcc = user.quizAccuracy || 75;
-  const earnedBadges = user.badges || ["fastlearner", "streak7"];
+  const currentDay = user.currentDay ?? 1;
+  const xp = user.xp ?? 0;
+  const level = Math.floor(xp / 200) + 1;
+  const currentLevelXP = xp - (level - 1) * 200;
+  const nextLevelXP = 200;
+  const streak = user.streak ?? 1;
+  const assignmentsDone = user.assignmentsCompleted ?? 0;
+  const quizAcc = user.quizAccuracy ?? 0;
+  const earnedBadges = user.badges ?? [];
 
   const renderOnboardingBanner = () => {
     if (user.testStatus !== "passed") {
@@ -245,6 +247,8 @@ function DashboardContent() {
                   domain={domain} 
                   day={currentDay} 
                   contentData={currentDayData}
+                  user={user}
+                  courseId={courseData?._id}
                 />
               </div>
 

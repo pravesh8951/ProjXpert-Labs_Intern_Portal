@@ -98,27 +98,28 @@ export default function LearningModules({ user, courseData, domain }: { user: an
         </div>
 
         {visibleWeeks.map((weekData: any, i: number) => {
-          // A module is locked if ALL its days are in the future
-          const isModuleLocked = false; // weekData.week > Math.ceil(currentDay / 7);
-          const isModuleCompleted = weekData.week < Math.ceil(currentDay / 7);
-          const isModuleCurrent = weekData.week === Math.ceil(currentDay / 7);
+          const moduleDays = weekData.days?.map((d: any) => d.day) || [];
+          const unlockedDaysList = user.unlockedDays || [1];
+          const isModuleLocked = !moduleDays.some((d: number) => unlockedDaysList.includes(d));
+          const isModuleCompleted = moduleDays.every((d: number) => user.completedDays?.includes(d));
+          const isModuleCurrent = !isModuleLocked && !isModuleCompleted;
           
           const isExpanded = expandedModule === weekData.week;
 
           return (
             <motion.div 
-              key={weekData.week} 
+              key={`module-week-${weekData.week}-index-${i}`} 
               initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
               className={`border rounded-2xl overflow-hidden transition-all duration-300 ${
                 isModuleLocked 
-                  ? "bg-white/[0.015] border-white/5 opacity-60 grayscale" 
+                  ? "bg-white/[0.015] border-white/5" 
                   : "bg-[#0d0f22]/80 border-white/10 hover:border-white/20 hover:shadow-[0_0_20px_rgba(255,255,255,0.02)]"
               }`}
             >
-              {/* Module Header (Click to expand) */}
+              {/* Module Header (Click to expand — always clickable) */}
               <div 
-                onClick={() => !isModuleLocked && toggleModule(weekData.week)}
-                className={`p-5 sm:p-6 flex items-center justify-between gap-4 ${!isModuleLocked ? "cursor-pointer" : "cursor-not-allowed"}`}
+                onClick={() => toggleModule(weekData.week)}
+                className={`p-5 sm:p-6 flex items-center justify-between gap-4 cursor-pointer ${isModuleLocked ? "opacity-70 hover:opacity-90" : ""} transition-opacity`}
               >
                 <div className="flex items-center gap-4 flex-1">
                   <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 border ${
@@ -141,6 +142,16 @@ export default function LearningModules({ user, courseData, domain }: { user: an
                           In Progress
                         </span>
                       )}
+                      {isModuleLocked && (
+                        <span className="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-white/5 text-gray-500 border border-white/10 flex items-center gap-1">
+                          <Lock className="w-2.5 h-2.5" /> Locked
+                        </span>
+                      )}
+                      {isModuleCompleted && (
+                        <span className="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-green-500/10 text-green-400 border border-green-500/20">
+                          Completed
+                        </span>
+                      )}
                     </div>
                     <h3 className={`font-bold text-lg leading-tight ${
                       isModuleLocked ? "text-gray-400" : "text-white"
@@ -150,16 +161,14 @@ export default function LearningModules({ user, courseData, domain }: { user: an
                   </div>
                 </div>
 
-                {!isModuleLocked && (
-                  <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-gray-400">
-                    <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isExpanded ? "rotate-180" : ""}`} />
-                  </div>
-                )}
+                <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-gray-400">
+                  <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isExpanded ? "rotate-180" : ""}`} />
+                </div>
               </div>
 
               {/* Expandable Content (Day Cards) */}
               <AnimatePresence>
-                {isExpanded && !isModuleLocked && (
+                {isExpanded && (
                   <motion.div
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: "auto", opacity: 1 }}
@@ -172,9 +181,9 @@ export default function LearningModules({ user, courseData, domain }: { user: an
                         <div className="absolute left-6 top-4 bottom-4 w-px bg-white/10" />
 
                         {weekData.days?.map((dayObj: any, dayIdx: number) => {
-                          const isDayCompleted = dayObj.day < currentDay;
-                          const isDayCurrent = dayObj.day === currentDay;
-                          const isDayLocked = false; // dayObj.day > currentDay;
+                          const isDayCompleted = user.completedDays?.includes(dayObj.day);
+                          const isDayLocked = !(user.unlockedDays?.includes(dayObj.day) || dayObj.day === 1);
+                          const isDayCurrent = !isDayLocked && !isDayCompleted;
 
                           return (
                             <div 

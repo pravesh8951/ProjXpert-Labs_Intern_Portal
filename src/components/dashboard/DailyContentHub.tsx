@@ -13,16 +13,20 @@ export default function DailyContentHub({
   domain,
   day,
   contentData,
+  user,
+  courseId,
 }: {
   domain: string;
   day: number;
   contentData?: any;
+  user?: any;
+  courseId?: string;
 }) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"reading" | "quiz" | "audio">("reading");
   const [isReaderOpen, setIsReaderOpen] = useState(false);
   const [isQuizOpen, setIsQuizOpen] = useState(false);
-  const [isCompleted, setIsCompleted] = useState(false);
+  const [isCompleted, setIsCompleted] = useState(user?.completedReadings?.includes(day) || false);
 
   // Quiz state
   const [quizPhase, setQuizPhase] = useState<"lobby" | "test" | "result">("lobby");
@@ -179,14 +183,18 @@ export default function DailyContentHub({
     setIsSubmitting(true);
     try {
       let correct = 0;
-      answers.forEach((ans, i) => {
-        if (!ans) return;
+      const builtAnswers = answers.map((ans, i) => {
+        if (!ans) return null;
         const q = questions[i];
         const selectedText = q.options[ans.selectedOption];
-        if (selectedText === q.answer) {
-          correct++;
-        }
-      });
+        const isCorrect = selectedText === q.answer;
+        if (isCorrect) correct++;
+        return {
+          questionIndex: i,
+          selectedOption: ans.selectedOption,
+          isCorrect
+        };
+      }).filter(Boolean);
       
       const percentage = Math.round((correct / questions.length) * 100);
       const isPassed = percentage >= 60;
@@ -207,7 +215,10 @@ export default function DailyContentHub({
           day: day,
           score: correct,
           total: questions.length,
-          passed: isPassed
+          passed: isPassed,
+          courseId,
+          percentage,
+          answers: builtAnswers
         }),
       });
     } catch (error) {
@@ -334,12 +345,18 @@ export default function DailyContentHub({
                   <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> ~5 min</span>
                   <span className="flex items-center gap-1"><Zap className="w-3.5 h-3.5 text-yellow-500" /> 30 XP</span>
                 </div>
-                <button
-                  onClick={startTest}
-                  className="mt-2 px-8 py-2.5 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold rounded-lg transition-all shadow-lg shadow-purple-600/15 flex items-center gap-2"
-                >
-                  Start Daily Quiz
-                </button>
+                {user?.completedQuizzes?.includes(day) ? (
+                  <div className="mt-2 px-8 py-2.5 bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-bold rounded-lg flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4" /> Quiz Completed!
+                  </div>
+                ) : (
+                  <button
+                    onClick={startTest}
+                    className="mt-2 px-8 py-2.5 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold rounded-lg transition-all shadow-lg shadow-purple-600/15 flex items-center gap-2"
+                  >
+                    Start Daily Quiz
+                  </button>
+                )}
               </motion.div>
             )}
 
@@ -558,9 +575,19 @@ export default function DailyContentHub({
                 <div className="pb-10 pt-4">
                   {!isCompleted ? (
                     <button
-                      onClick={() => {
+                      onClick={async () => {
                         setIsCompleted(true);
-                        setTimeout(() => setIsReaderOpen(false), 1200);
+                        try {
+                          await fetch("/api/user/daily-reading/complete", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ day }),
+                          });
+                          setTimeout(() => {
+                            setIsReaderOpen(false);
+                            window.location.reload();
+                          }, 1200);
+                        } catch (e) { console.error(e); }
                       }}
                       className="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold text-base rounded-xl transition-all shadow-lg shadow-blue-600/25 flex items-center justify-center gap-2 group"
                     >
@@ -747,6 +774,7 @@ export default function DailyContentHub({
                           onClick={() => {
                             setIsQuizOpen(false);
                             setQuizPhase("lobby");
+                            window.location.reload();
                           }}
                           className="px-10 py-3.5 bg-white text-black hover:bg-gray-200 font-bold rounded-xl transition-all shadow-xl"
                         >

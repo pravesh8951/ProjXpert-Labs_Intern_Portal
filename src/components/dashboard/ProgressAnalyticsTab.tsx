@@ -36,29 +36,91 @@ function CircleProgress({ value, max, color, label, sublabel }: any) {
 export default function ProgressAnalyticsTab({ user, courseData, domain }: any) {
   const planWeeks = user.internshipPlan === "3m" ? 12 : user.internshipPlan === "2m" ? 8 : 4;
   const totalDays = planWeeks * 7;
-  const currentDay = user.currentDay || 1;
-  const quizAcc = user.quizAccuracy || 85;
-  const assignmentsDone = user.assignmentsCompleted || 3;
-  const xp = user.xp || 320;
-  const streak = user.streak || 7;
+  const currentDay = user.unlockedDays?.length > 0 ? Math.max(...user.unlockedDays) : (user.currentDay ?? 1);
+  const assignmentsDone = user.assignmentsCompleted ?? 0;
+  const xp = user.xp ?? 0;
+  const streak = user.streak ?? 1;
 
-  const domainColor = domain === "ai" ? "#60a5fa" : "#c084fc"; // blue-400 or purple-400
+  const domainColor = domain === "ai" ? "#60a5fa" : "#c084fc";
+
+  // ── Compute live quiz accuracy from dailyQuizScores ──
+  const allScores: { day: number; score: number; total: number }[] = user.dailyQuizScores || [];
+  const liveQuizAcc = allScores.length > 0
+    ? Math.round(
+        allScores.reduce((sum, s) => sum + (s.total > 0 ? s.score / s.total : 0), 0) /
+          allScores.length * 100
+      )
+    : (user.quizAccuracy ?? 0);
+
+  // ── Weekly bar chart: last 7 quiz days (sorted by day) ──
+  const recentQuizzes = [...allScores].sort((a, b) => b.day - a.day).slice(0, 7).reverse();
+  const barData: { label: string; score: number }[] = recentQuizzes.map((s) => ({
+    label: `D${s.day}`,
+    score: s.total > 0 ? Math.round((s.score / s.total) * 100) : 0,
+  }));
+  // Pad to 7 bars if fewer
+  while (barData.length < 7) barData.unshift({ label: "—", score: 0 });
+
+  // ── XP gained this week (last 7 completed quiz days) ──
+  const xpPerQuiz = 10; // same as backend
+  const xpThisWeek = recentQuizzes.filter((s) => s.score > 0).length * xpPerQuiz;
+
+  // Generate real-time timeline events based on actual completions
+  const events: any[] = [];
+  for (let d = currentDay; d >= 1; d--) {
+    const dayEvents: any[] = [];
+    
+    if (user.completedReadings?.includes(d)) {
+      dayEvents.push({
+        type: "read",
+        text: `Read Day ${d} Content`,
+        done: true
+      });
+    }
+    
+    if (user.completedQuizzes?.includes(d)) {
+      const scoreObj = user.dailyQuizScores?.find((s: any) => s.day === d);
+      const scorePct = scoreObj && scoreObj.total > 0 ? Math.round((scoreObj.score / scoreObj.total) * 100) : null;
+      dayEvents.push({
+        type: "quiz",
+        text: `Completed Daily Quiz (Day ${d})${scorePct !== null ? ` - ${scorePct}%` : ""}`,
+        done: true
+      });
+    }
+    
+    if (user.completedDays?.includes(d)) {
+      dayEvents.push({
+        type: "milestone",
+        text: `Finished Day ${d} Challenges`,
+        done: true
+      });
+    }
+    
+    if (d % 7 === 0 && user.completedDays?.includes(d)) {
+      dayEvents.push({
+        type: "milestone",
+        text: `Finished Module ${Math.ceil(d / 7)}`,
+        done: true
+      });
+    }
+
+    if (dayEvents.length > 0) {
+      events.push({
+        day: `Day ${d}`,
+        events: dayEvents
+      });
+    }
+  }
   
-  // Weekly Performance Mock Data for CSS Charts
-  const weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-  const quizScores = [70, 85, 90, 0, 100, 80, 95]; // 0 means not taken
-
-  // Timeline Mock Data
-  const timelineEvents = [
-    { day: "Today", events: [
-      { type: "read", text: "Read Day 5 Content", done: true },
-      { type: "quiz", text: "Completed Daily Quiz (95%)", done: true },
-      { type: "assignment", text: "Submitted Assignment: Loops & Sets", done: false },
-    ]},
-    { day: "Yesterday", events: [
-      { type: "milestone", text: "Finished Module 1", done: true },
-    ]}
-  ];
+  if (events.length === 0) {
+    events.push({
+      day: "Get Started",
+      events: [
+        { type: "milestone", text: "Started your internship journey! 🚀", done: true }
+      ]
+    });
+  }
+  const timelineEvents = events.slice(0, 3);
 
   const allWeeks = courseData?.months?.flatMap((m: any) => m.weeks) || [];
   const visibleWeeks = allWeeks.slice(0, planWeeks);
@@ -75,10 +137,10 @@ export default function ProgressAnalyticsTab({ user, courseData, domain }: any) 
         <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="lg:col-span-2 bg-[#0d0f22] border border-white/5 rounded-3xl p-8 flex items-center justify-around shadow-xl">
           <CircleProgress value={currentDay} max={totalDays} color={domainColor} label="Internship" sublabel={`Day ${currentDay} of ${totalDays}`} />
           <div className="w-px h-24 bg-white/5" />
-          <CircleProgress value={quizAcc} max={100} color="#00d4ff" label="Quiz Accuracy" sublabel={`${quizAcc}% average`} />
+          <CircleProgress value={liveQuizAcc} max={100} color="#00d4ff" label="Quiz Accuracy" sublabel={`${liveQuizAcc}% average`} />
           <div className="w-px h-24 bg-white/5 hidden sm:block" />
           <div className="hidden sm:block">
-            <CircleProgress value={assignmentsDone} max={totalDays / 3} color="#f59e0b" label="Assignments" sublabel={`${assignmentsDone} submitted`} />
+            <CircleProgress value={assignmentsDone} max={planWeeks} color="#f59e0b" label="Assignments" sublabel={`${assignmentsDone} submitted`} />
           </div>
         </motion.div>
         
@@ -90,7 +152,7 @@ export default function ProgressAnalyticsTab({ user, courseData, domain }: any) 
             <p className="text-gray-400 text-xs font-bold uppercase tracking-wider">Total XP</p>
           </div>
           <p className="text-4xl font-black text-white mb-1">{xp}</p>
-          <p className="text-xs text-green-400 font-bold flex items-center gap-1"><TrendingUp className="w-3 h-3" /> +150 this week</p>
+          <p className="text-xs text-green-400 font-bold flex items-center gap-1"><TrendingUp className="w-3 h-3" /> +{xpThisWeek} this week</p>
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="bg-white/5 border border-white/10 rounded-3xl p-6 flex flex-col justify-center">
@@ -113,48 +175,68 @@ export default function ProgressAnalyticsTab({ user, courseData, domain }: any) 
             <TrendingUp className="w-5 h-5 text-blue-400" /> Weekly Performance Trend
           </h3>
           <div className="bg-[#0d0f22] border border-white/5 rounded-3xl p-8 shadow-xl">
-            <p className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-6">Quiz Accuracy by Day</p>
-            
-            {/* CSS Bar Chart */}
-            <div className="h-48 flex items-end justify-between gap-2 border-b border-white/10 pb-2 relative">
-              {/* Grid lines */}
-              <div className="absolute left-0 right-0 bottom-1/2 h-px bg-white/5" />
-              <div className="absolute left-0 right-0 top-0 h-px bg-white/5" />
-              
-              {quizScores.map((score, i) => (
-                <div key={i} className="flex-1 flex flex-col items-center group relative z-10">
-                  <motion.div 
-                    initial={{ height: 0 }} animate={{ height: `${score}%` }} 
-                    transition={{ duration: 1, delay: i * 0.1 }}
-                    className={`w-full max-w-[2.5rem] rounded-t-xl transition-all ${
-                      score > 80 ? "bg-gradient-to-t from-blue-600/50 to-cyan-400" :
-                      score > 0 ? "bg-gradient-to-t from-yellow-600/50 to-yellow-400" :
-                      "bg-white/5"
-                    } hover:brightness-125`}
-                  >
-                    {score > 0 && (
-                      <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-xs font-bold text-white opacity-0 group-hover:opacity-100 transition-opacity">
-                        {score}%
-                      </span>
-                    )}
-                  </motion.div>
+            <p className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-6">
+              Quiz Accuracy — Last {barData.filter(b => b.label !== "—").length} Completed Day{barData.filter(b => b.label !== "—").length !== 1 ? "s" : ""}
+            </p>
+
+            {allScores.length === 0 ? (
+              <div className="h-48 flex flex-col items-center justify-center text-center gap-3">
+                <Brain className="w-8 h-8 text-gray-600" />
+                <p className="text-gray-500 text-sm font-semibold">No quiz data yet</p>
+                <p className="text-gray-600 text-xs">Complete your first daily quiz to see performance trends</p>
+              </div>
+            ) : (
+              <>
+                {/* CSS Bar Chart */}
+                <div className="h-48 flex items-end justify-between gap-2 border-b border-white/10 pb-2 relative">
+                  {/* Grid lines */}
+                  <div className="absolute left-0 right-0 bottom-1/2 h-px bg-white/5" />
+                  <div className="absolute left-0 right-0 top-0 h-px bg-white/5" />
+
+                  {barData.map((bar, i) => (
+                    <div key={i} className="flex-1 flex flex-col items-center group relative z-10">
+                      <motion.div
+                        initial={{ height: 0 }}
+                        animate={{ height: bar.score > 0 ? `${bar.score}%` : "4px" }}
+                        transition={{ duration: 1, delay: i * 0.1 }}
+                        className={`w-full max-w-[2.5rem] rounded-t-xl transition-all ${
+                          bar.score >= 80 ? "bg-gradient-to-t from-blue-600/50 to-cyan-400" :
+                          bar.score >= 50 ? "bg-gradient-to-t from-yellow-600/50 to-yellow-400" :
+                          bar.score > 0  ? "bg-gradient-to-t from-red-600/50 to-red-400" :
+                          "bg-white/5"
+                        } hover:brightness-125`}
+                      >
+                        {bar.score > 0 && (
+                          <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-xs font-bold text-white opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                            {bar.score}%
+                          </span>
+                        )}
+                      </motion.div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-            <div className="flex justify-between mt-4">
-              {weekDays.map((day, i) => (
-                <div key={i} className="flex-1 text-center text-xs font-bold text-gray-500 uppercase">{day}</div>
-              ))}
-            </div>
-            
+                <div className="flex justify-between mt-4">
+                  {barData.map((bar, i) => (
+                    <div key={i} className={`flex-1 text-center text-[10px] font-bold uppercase ${
+                      bar.label === "—" ? "text-gray-700" : "text-gray-500"
+                    }`}>{bar.label}</div>
+                  ))}
+                </div>
+              </>
+            )}
+
             <div className="mt-8 flex gap-6 border-t border-white/5 pt-6">
               <div>
-                <p className="text-2xl font-black text-white">4/5</p>
+                <p className="text-2xl font-black text-white">{assignmentsDone} / {planWeeks}</p>
                 <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Assignments Submitted</p>
               </div>
               <div>
-                <p className="text-2xl font-black text-white">92%</p>
-                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Avg Quiz Score</p>
+                <p className="text-2xl font-black text-white">{liveQuizAcc}%</p>
+                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Avg Quiz Accuracy</p>
+              </div>
+              <div>
+                <p className="text-2xl font-black text-white">{allScores.length}</p>
+                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Quizzes Taken</p>
               </div>
             </div>
           </div>
@@ -204,6 +286,10 @@ export default function ProgressAnalyticsTab({ user, courseData, domain }: any) 
             const isCurrent = mod.week === Math.ceil(currentDay / 7);
             const isCompleted = mod.week < Math.ceil(currentDay / 7);
 
+            const completedDaysInWeek = mod.days?.filter((d: any) => user.completedDays?.includes(d.day)).length || 0;
+            const completionPct = Math.round((completedDaysInWeek / 7) * 100);
+            const isAssignmentSubmitted = user.assignmentsCompleted >= mod.week;
+
             return (
               <div key={i} className={`p-6 rounded-3xl border transition-all ${
                 isCompleted ? "bg-green-500/[0.03] border-green-500/20" :
@@ -218,7 +304,7 @@ export default function ProgressAnalyticsTab({ user, courseData, domain }: any) 
                   }`}>
                     Module {mod.week}
                   </span>
-                  <span className="text-xs font-bold text-white">{isCompleted ? "100%" : isCurrent ? "40%" : "0%"}</span>
+                  <span className="text-xs font-bold text-white">{completionPct}%</span>
                 </div>
                 
                 <h4 className={`text-base font-bold mb-6 line-clamp-1 ${isLocked ? "text-gray-400" : "text-white"}`}>
@@ -229,19 +315,19 @@ export default function ProgressAnalyticsTab({ user, courseData, domain }: any) 
                   <div className="flex justify-between items-center text-xs">
                     <span className="text-gray-500 font-medium">Reading Content</span>
                     <span className={isCompleted || isCurrent ? "text-green-400 font-bold" : "text-gray-600"}>
-                      {isCompleted ? "7/7 Days" : isCurrent ? "3/7 Days" : "0/7 Days"}
+                      {mod.days?.filter((d: any) => user.completedReadings?.includes(d.day)).length || 0}/7 Days
                     </span>
                   </div>
                   <div className="flex justify-between items-center text-xs">
-                    <span className="text-gray-500 font-medium">Weekly Quiz</span>
+                    <span className="text-gray-500 font-medium">Weekly Quizzes</span>
                     <span className={isCompleted ? "text-white font-bold" : "text-gray-600"}>
-                      {isCompleted ? "Passed (92%)" : "Pending"}
+                      {mod.days?.filter((d: any) => user.completedQuizzes?.includes(d.day)).length || 0}/7 Passed
                     </span>
                   </div>
                   <div className="flex justify-between items-center text-xs">
                     <span className="text-gray-500 font-medium">Project Assignment</span>
-                    <span className={isCompleted ? "text-yellow-400 font-bold" : "text-gray-600"}>
-                      {isCompleted ? "Graded A+" : "Pending"}
+                    <span className={isAssignmentSubmitted ? "text-yellow-400 font-bold" : "text-gray-600"}>
+                      {isAssignmentSubmitted ? "Submitted" : "Pending"}
                     </span>
                   </div>
                 </div>

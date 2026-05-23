@@ -33,6 +33,12 @@ export interface IUser extends Document {
     passed: boolean;
     completedAt: Date;
   }[];
+  unlockedDays: number[];
+  completedDays: number[];
+  completedReadings: number[];
+  completedQuizzes: number[];
+  quizHistory: mongoose.Types.ObjectId[];
+  totalProgress: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -57,7 +63,7 @@ const UserSchema: Schema = new Schema(
     // Gamification
     xp: { type: Number, default: 0 },
     level: { type: Number, default: 1 },
-    streak: { type: Number, default: 0 },
+    streak: { type: Number, default: 1 },
     lastActiveDate: { type: Date, default: null },
     badges: { type: [String], default: [] },
     // Progress
@@ -76,6 +82,12 @@ const UserSchema: Schema = new Schema(
       ],
       default: [],
     },
+    unlockedDays: { type: [Number], default: [1] },
+    completedDays: { type: [Number], default: [] },
+    completedReadings: { type: [Number], default: [] },
+    completedQuizzes: { type: [Number], default: [] },
+    quizHistory: { type: [Schema.Types.ObjectId], ref: "QuizResult", default: [] },
+    totalProgress: { type: Number, default: 0 },
   },
   { timestamps: true }
 );
