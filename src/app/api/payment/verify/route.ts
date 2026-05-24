@@ -7,6 +7,7 @@ import UserCourseProgress from "@/models/UserCourseProgress";
 import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
 import { generateToken } from "@/lib/auth";
+import { sendPaymentSuccessEmail } from "@/lib/mailer";
 
 export async function POST(req: Request) {
   try {
@@ -85,6 +86,14 @@ export async function POST(req: Request) {
             maxAge: 7 * 24 * 60 * 60,
             path: "/",
           });
+
+          try {
+            const requestUrl = new URL(req.url);
+            const baseUrl = `${requestUrl.protocol}//${requestUrl.host}`;
+            await sendPaymentSuccessEmail(user.email, user.name, payment.plan, user.domain || 'ai', razorpay_payment_id, baseUrl);
+          } catch (emailErr) {
+            console.error("Failed to send payment success email:", emailErr);
+          }
         }
       }
       return NextResponse.json({ success: true });
