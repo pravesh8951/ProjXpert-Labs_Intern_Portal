@@ -3,6 +3,7 @@
 import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { Mail, Lock, Loader2, CheckCircle2, ArrowRight } from "lucide-react";
 
 function LoginForm() {
@@ -59,7 +60,8 @@ function LoginForm() {
 
       <div className="relative z-10 w-full max-w-lg">
         {/* Brand mark */}
-        <div className="mb-8 text-center">
+        <div className="mb-8 text-center flex flex-col items-center">
+          <Image src="/logo.png" alt="ProjXpert Labs" width={200} height={40} className="w-auto h-10 mb-6 object-contain" />
           <h2 className="text-3xl font-black text-white tracking-tight">Welcome back</h2>
           <p className="text-gray-400 text-sm mt-2">Log in to your ProjXpert account</p>
         </div>

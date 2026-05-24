@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 import { User, Mail, Phone, Building, Lock, ShieldCheck, ArrowRight, Loader2 } from "lucide-react";
 
@@ -79,7 +80,8 @@ export default function RegisterPage() {
 
       <div className="relative z-10 w-full max-w-2xl">
         {/* Brand mark */}
-        <div className="mb-8 text-center">
+        <div className="mb-8 text-center flex flex-col items-center">
+          <Image src="/logo.png" alt="ProjXpert Labs" width={200} height={40} className="w-auto h-10 mb-6 object-contain" />
           <h2 className="text-3xl font-black text-white tracking-tight">Create your account</h2>
           <p className="text-gray-400 text-sm mt-2">Join ProjXpert Labs and start building</p>
         </div>

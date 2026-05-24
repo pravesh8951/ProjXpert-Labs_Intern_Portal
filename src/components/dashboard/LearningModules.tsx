@@ -103,11 +103,13 @@ export default function LearningModules({ user, courseData, domain }: { user: an
         {visibleWeeks.map((weekData: any, i: number) => {
           const moduleDays = weekData.days?.map((d: any) => d.day) || [];
           const unlockedDaysList = user.unlockedDays || [1];
-          const isModuleLocked = !moduleDays.some((d: number) => unlockedDaysList.includes(d));
-          const isModuleCompleted = moduleDays.every((d: number) => user.completedDays?.includes(d));
+          const isComingSoon = moduleDays.length === 0;
+          const isModuleLocked = isComingSoon || !moduleDays.some((d: number) => unlockedDaysList.includes(d));
+          const isModuleCompleted = !isComingSoon && moduleDays.every((d: number) => user.completedDays?.includes(d));
           const isModuleCurrent = !isModuleLocked && !isModuleCompleted;
           
-          const isExpanded = expandedModule === weekData.week;
+          const isExpanded = expandedModule === (weekData.week || `placeholder-${i}`);
+          const displayWeekNum = weekData.week || (i + 1);
 
           return (
             <motion.div 
@@ -121,39 +123,49 @@ export default function LearningModules({ user, courseData, domain }: { user: an
             >
               {/* Module Header (Click to expand — always clickable) */}
               <div 
-                onClick={() => toggleModule(weekData.week)}
-                className={`p-5 sm:p-6 flex items-center justify-between gap-4 cursor-pointer ${isModuleLocked ? "opacity-70 hover:opacity-90" : ""} transition-opacity`}
+                onClick={() => !isComingSoon && toggleModule(weekData.week || `placeholder-${i}`)}
+                className={`p-5 sm:p-6 flex items-center justify-between gap-4 ${isComingSoon ? "cursor-not-allowed" : "cursor-pointer"} ${isModuleLocked ? "opacity-70 hover:opacity-90" : ""} transition-opacity`}
               >
                 <div className="flex items-center gap-4 flex-1">
                   <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 border ${
                     isModuleCompleted ? "bg-green-500/10 border-green-500/20 text-green-400" :
                     isModuleCurrent ? `${domainBg} ${domainColor}` :
+                    isComingSoon ? "bg-orange-500/10 border-orange-500/20 text-orange-400" :
                     "bg-white/5 border-white/10 text-gray-500"
                   }`}>
                     {isModuleCompleted ? <CheckCircle className="w-5 h-5" /> : 
                      isModuleCurrent ? <Sparkles className="w-5 h-5" /> : 
+                     isComingSoon ? <Clock className="w-5 h-5" /> :
                      <Lock className="w-5 h-5" />}
                   </div>
                   
                   <div>
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">
-                        Module {weekData.week}
+                        Module {displayWeekNum}
                       </span>
-                      {isModuleCurrent && (
-                        <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${domainBg} ${domainColor}`}>
-                          In Progress
+                      {isComingSoon ? (
+                        <span className="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-orange-500/10 text-orange-400 border border-orange-500/20 flex items-center gap-1">
+                          <Clock className="w-2.5 h-2.5" /> Coming Soon
                         </span>
-                      )}
-                      {isModuleLocked && (
-                        <span className="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-white/5 text-gray-500 border border-white/10 flex items-center gap-1">
-                          <Lock className="w-2.5 h-2.5" /> Locked
-                        </span>
-                      )}
-                      {isModuleCompleted && (
-                        <span className="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-green-500/10 text-green-400 border border-green-500/20">
-                          Completed
-                        </span>
+                      ) : (
+                        <>
+                          {isModuleCurrent && (
+                            <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${domainBg} ${domainColor}`}>
+                              In Progress
+                            </span>
+                          )}
+                          {isModuleLocked && (
+                            <span className="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-white/5 text-gray-500 border border-white/10 flex items-center gap-1">
+                              <Lock className="w-2.5 h-2.5" /> Locked
+                            </span>
+                          )}
+                          {isModuleCompleted && (
+                            <span className="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-green-500/10 text-green-400 border border-green-500/20">
+                              Completed
+                            </span>
+                          )}
+                        </>
                       )}
                     </div>
                     <h3 className={`font-bold text-lg leading-tight ${
@@ -164,9 +176,11 @@ export default function LearningModules({ user, courseData, domain }: { user: an
                   </div>
                 </div>
 
-                <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-gray-400">
-                  <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isExpanded ? "rotate-180" : ""}`} />
-                </div>
+                {!isComingSoon && (
+                  <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-gray-400">
+                    <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isExpanded ? "rotate-180" : ""}`} />
+                  </div>
+                )}
               </div>
 
               {/* Expandable Content (Day Cards) */}

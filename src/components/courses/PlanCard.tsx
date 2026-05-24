@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { motion } from "framer-motion";
-import { Check, ShieldCheck, Trophy, Zap, Clock } from "lucide-react";
+import { Check, Sparkles, Clock } from "lucide-react";
 
 interface ICoursePlan {
   duration: number;
@@ -24,62 +24,66 @@ const PlanCard: React.FC<PlanCardProps> = ({ plan, isSelected, onSelect, onEnrol
     <motion.div
       whileHover={{ y: -5 }}
       onClick={onSelect}
-      className={`relative cursor-pointer p-6 rounded-3xl border-2 transition-all duration-300 overflow-hidden ${
+      className={`relative cursor-pointer p-8 rounded-2xl border backdrop-blur-xl flex flex-col justify-between transition-all duration-300 overflow-visible ${
         isSelected
-          ? "border-cyan-500 bg-slate-900 shadow-[0_0_30px_rgba(6,182,212,0.15)]"
-          : "border-slate-800 bg-slate-900/50 hover:border-slate-700"
+          ? "border-blue-500/50 bg-blue-500/[0.02] shadow-2xl shadow-blue-500/5 -translate-y-2"
+          : "border-white/5 bg-white/[0.02] hover:border-white/10"
       }`}
     >
       {isPopular && (
-        <div className="absolute top-0 right-0 bg-cyan-500 text-slate-900 text-[10px] font-black uppercase tracking-widest px-4 py-1 rounded-bl-xl">
-          Most Popular
+        <div className="absolute -top-4 left-0 right-0 flex justify-center">
+          <span className="bg-blue-600 text-white text-[10px] font-extrabold px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-lg shadow-blue-500/20">
+            <Sparkles className="w-3.5 h-3.5" />
+            RECOMMENDED PLAN
+          </span>
         </div>
       )}
 
-      <div className="mb-6">
-        <div className="flex items-center gap-2 mb-2">
-          <Clock size={16} className="text-cyan-400" />
-          <span className="text-sm font-bold text-cyan-400 uppercase tracking-widest">
-            {plan.duration} Month Internship
-          </span>
+      <div>
+        <div className="mb-6">
+          <div className="flex items-center gap-2 mb-2">
+            <Clock size={14} className={isSelected ? "text-blue-400" : "text-gray-400"} />
+            <span className={`text-xs font-bold uppercase tracking-widest ${isSelected ? "text-blue-400" : "text-gray-400"}`}>
+              {plan.duration} Month Internship
+            </span>
+          </div>
+          <h3 className="text-xl font-bold text-[var(--text-primary)] leading-tight mb-2">{plan.level}</h3>
+          <p className="text-[var(--text-secondary)] text-xs h-8">{plan.certificateName}</p>
         </div>
-        <h3 className="text-2xl font-bold text-white leading-tight mb-1">{plan.level}</h3>
-        <p className="text-slate-400 text-sm">{plan.certificateName}</p>
-      </div>
 
-      <div className="mb-8">
-        <div className="flex items-baseline gap-1">
-          <span className="text-4xl font-black text-white">₹{plan.price}</span>
-          <span className="text-slate-500 text-sm">/ total</span>
+        <div className="mb-8 border-b border-white/5 pb-6">
+          <div className="flex items-baseline gap-1 text-[var(--text-primary)]">
+            <span className="text-2xl font-bold">₹</span>
+            <span className="text-4xl font-black tracking-tight">{plan.price}</span>
+            <span className="text-gray-500 text-xs ml-1.5 font-mono">/ total</span>
+          </div>
         </div>
-      </div>
 
-      <ul className="space-y-3 mb-8">
-        {[
-          `${plan.duration * 4} Weeks of Training`,
-          "Guided Projects",
-          "Certificate of Completion",
-          plan.duration >= 2 ? "Intermediate API Security" : null,
-          plan.duration >= 3 ? "Advanced Penetration Testing" : null,
-        ].filter(Boolean).map((feature, i) => (
-          <li key={i} className="flex items-center gap-3 text-sm text-slate-300">
-            <div className="flex-shrink-0 w-5 h-5 rounded-full bg-cyan-500/10 flex items-center justify-center">
-              <Check size={12} className="text-cyan-400" />
-            </div>
-            {feature}
-          </li>
-        ))}
-      </ul>
+        <ul className="space-y-4 mb-8">
+          {[
+            `${plan.duration * 4} Weeks of Training`,
+            "Guided Projects",
+            "Certificate of Completion",
+            plan.duration >= 2 ? "Intermediate API Security" : null,
+            plan.duration >= 3 ? "Advanced Penetration Testing" : null,
+          ].filter(Boolean).map((feature, i) => (
+            <li key={i} className="flex items-start gap-3">
+              <Check className={`h-4 w-4 shrink-0 mt-0.5 ${isSelected ? "text-blue-400" : "text-gray-400"}`} />
+              <span className="text-gray-300 text-xs leading-normal">{feature}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
 
       <button
         onClick={(e) => {
           e.stopPropagation();
           if (onEnroll) onEnroll();
         }}
-        className={`w-full py-4 rounded-xl font-bold transition-all ${
+        className={`w-full py-3.5 rounded-xl text-center text-xs font-bold transition-all duration-200 border border-white/5 ${
           isSelected
-            ? "bg-cyan-500 text-slate-900 shadow-[0_0_20px_rgba(6,182,212,0.4)]"
-            : "bg-slate-800 text-white hover:bg-slate-700"
+            ? "bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-500/20"
+            : "bg-white/10 hover:bg-white/20 text-white"
         }`}
       >
         {isSelected ? "Enroll Now" : "Choose Plan"}
@@ -88,7 +92,7 @@ const PlanCard: React.FC<PlanCardProps> = ({ plan, isSelected, onSelect, onEnrol
       {isSelected && (
         <motion.div
           layoutId="selection-border"
-          className="absolute inset-0 border-2 border-cyan-500 rounded-3xl pointer-events-none"
+          className="absolute inset-0 border-2 border-blue-500/50 rounded-2xl pointer-events-none"
         />
       )}
     </motion.div>

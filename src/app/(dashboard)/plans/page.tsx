@@ -130,8 +130,8 @@ export default function PlansPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0a0a1a] flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
+      <div className="min-h-screen bg-[var(--background)] flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -151,7 +151,7 @@ export default function PlansPage() {
   const currentPlan = plans.find(p => p.duration === selectedPlan) || plans[1];
 
   return (
-    <div className="min-h-screen bg-[#020617] text-slate-200">
+    <div className="min-h-screen bg-[var(--background)] text-[var(--text-primary)]">
       <Script src="https://checkout.razorpay.com/v1/checkout.js" />
       
       {/* Hero Section */}
@@ -205,26 +205,12 @@ export default function PlansPage() {
             ))}
           </div>
 
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className="bg-slate-900/50 border border-slate-800 rounded-3xl p-8 md:p-12"
-          >
-            <div className="mb-8 border-b border-slate-800 pb-4 text-center">
-              <h2 className="text-3xl font-bold text-white mb-2">Curriculum Roadmap</h2>
-              <p className="text-slate-400">Unlock {selectedPlan * 4} weeks of intensive training.</p>
-            </div>
 
-            {course?.roadmap && (
-              <RoadmapViewer roadmap={course.roadmap} selectedDuration={selectedPlan} />
-            )}
-          </motion.div>
         </div>
       </section>
 
       {/* Trust Badges */}
-      <section className="py-20 border-t border-slate-900 bg-slate-950/50">
+      <section className="py-20 border-t border-[var(--nav-border)] bg-[var(--background)]">
         <div className="max-w-6xl mx-auto px-4 grid grid-cols-2 md:grid-cols-4 gap-8">
           {[
             { icon: BookOpen, label: "Structured Learning" },
@@ -233,10 +219,10 @@ export default function PlansPage() {
             { icon: Trophy, label: "Global Certificates" },
           ].map((item, i) => (
             <div key={i} className="flex flex-col items-center gap-3 text-center">
-              <div className="w-12 h-12 rounded-2xl bg-slate-900 flex items-center justify-center text-cyan-400 border border-slate-800">
+              <div className="w-12 h-12 rounded-2xl bg-[var(--nav-border)] flex items-center justify-center text-primary border border-white/5">
                 <item.icon size={24} />
               </div>
-              <span className="text-sm font-bold text-slate-300 uppercase tracking-widest">{item.label}</span>
+              <span className="text-sm font-bold text-[var(--text-secondary)] uppercase tracking-widest">{item.label}</span>
             </div>
           ))}
         </div>

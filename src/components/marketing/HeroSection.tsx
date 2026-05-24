@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Shield, Brain, ArrowRight, Code, Terminal, TerminalSquare, AlertTriangle, ShieldCheck, Cpu } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function HeroSection() {
   const [textIndex, setTextIndex] = useState(0);
@@ -105,8 +106,8 @@ export default function HeroSection() {
               className="text-4xl sm:text-6xl font-black tracking-tight text-[var(--text-primary)] leading-[1.1]"
             >
               Build Real Projects With
-              <span className="block text-gradient mt-2 font-black">
-                ProjXpert Labs
+              <span className="block mt-4">
+                <Image src="/logo.png" alt="ProjXpert Labs" width={400} height={80} className="w-auto h-12 sm:h-16 object-contain" priority />
               </span>
             </motion.h1>
 

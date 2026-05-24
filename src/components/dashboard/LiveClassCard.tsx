@@ -143,24 +143,28 @@ export default function LiveClassCard({ domain, day }: { domain?: string; day?: 
                 <Users className="w-3.5 h-3.5" />
                 <span>142 students joined</span>
               </div>
-              <button
-                onClick={() => window.open(classData?.meetingLink || "https://meet.google.com/xyz-abc-123", "_blank")}
+              <a
+                href={classData?.meetingLink || "https://meet.google.com/xyz-abc-123"}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="w-full py-3 bg-red-600 hover:bg-red-500 text-white text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-2 shadow-lg shadow-red-600/15"
               >
                 <Video className="w-4 h-4" /> Join Class Now <ExternalLink className="w-3.5 h-3.5" />
-              </button>
+              </a>
             </motion.div>
           )}
 
           {status === "recorded" && (
             <motion.div key="recorded" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-3">
               <p className="text-xs text-gray-400">Class ended. Recording is available.</p>
-              <button 
-                onClick={() => window.open(classData?.recordingLink || "#", "_blank")}
+              <a 
+                href={classData?.recordingLink || "#"}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="w-full py-3 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-2 border border-blue-500/20"
               >
                 <PlayCircle className="w-4 h-4" /> Watch Recording
-              </button>
+              </a>
             </motion.div>
           )}
         </AnimatePresence>

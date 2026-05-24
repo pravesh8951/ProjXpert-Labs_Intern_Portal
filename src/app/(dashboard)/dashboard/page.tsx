@@ -11,13 +11,21 @@ import DailyContentHub from "@/components/dashboard/DailyContentHub";
 import LearningModules from "@/components/dashboard/LearningModules";
 import HomeProgressSection from "@/components/dashboard/HomeProgressSection";
 import ProgressAnalyticsTab from "@/components/dashboard/ProgressAnalyticsTab";
+import AssignmentsTab from "@/components/dashboard/AssignmentsTab";
 
 
-const quotes = [
+const aiQuotes = [
   "The expert in anything was once a beginner.",
   "Code. Learn. Build. Repeat.",
+  "Data is the new oil, AI is the engine.",
   "Every line of code is a step toward mastery.",
+];
+
+const cyberQuotes = [
+  "The expert in anything was once a beginner.",
+  "Defend. Detect. Respond. Repeat.",
   "Security is not a product, but a process.",
+  "Think like a hacker to catch a hacker.",
 ];
 
 const roadmapAI = [
@@ -91,7 +99,7 @@ function DashboardContent() {
   const tab = searchParams.get("tab") || "home";
   const action = searchParams.get("action");
   
-  const [quoteIdx] = useState(() => Math.floor(Math.random() * quotes.length));
+  const [quoteIdx] = useState(() => Math.floor(Math.random() * 4));
 
   useEffect(() => {
     const controller = new AbortController();
@@ -232,9 +240,9 @@ function DashboardContent() {
                       </span>
                     </div>
                     <h1 className="text-3xl md:text-4xl font-black text-white mb-2">
-                      Ready to build, <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">{user.name.split(" ")[0]}?</span>
+                      {domain === "ai" ? "Ready to build, " : "Ready to defend, "} <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">{user.name.split(" ")[0]}?</span>
                     </h1>
-                    <p className="text-gray-400 text-sm font-medium">Day {currentDay} of {totalDays} · {quotes[quoteIdx]}</p>
+                    <p className="text-gray-400 text-sm font-medium">Day {currentDay} of {totalDays} · {domain === "ai" ? aiQuotes[quoteIdx] : cyberQuotes[quoteIdx]}</p>
                   </div>
 
                   <div className="flex gap-3">
@@ -307,7 +315,6 @@ function DashboardContent() {
                 {[
                   { label: "Join Internship WhatsApp Community", icon: Calendar, color: "text-green-400", url: "#" },
                   { label: "Join Course Specific WhatsApp Group", icon: Trophy, color: "text-blue-400", url: "#" },
-                  { label: "View Achievement Gallery", icon: Award, color: "text-yellow-400", url: "?tab=achievements" },
                 ].map((actionItem, i) => (
                   <button key={i} onClick={() => { if (actionItem.url) window.location.href = actionItem.url; }} className="w-full flex items-center gap-3 p-3.5 rounded-xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.05] hover:border-white/10 transition-all text-left">
                     <actionItem.icon className={`w-4 h-4 ${actionItem.color} flex-shrink-0`} />
@@ -326,36 +333,7 @@ function DashboardContent() {
 
         {/* ── ASSIGNMENTS TAB ── */}
         {tab === "assignments" && (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-black text-white">Project Assignments</h2>
-            <div className="grid md:grid-cols-2 gap-6">
-              {[
-                { week: "Week 1", title: domain === "ai" ? "Neural Classifier Lab" : "Network Traffic Audit", due: "Sunday", status: "pending" },
-                { week: "Week 2", title: domain === "ai" ? "Sentiment Analysis API" : "SQL Injection Prevention", due: "May 24", status: "locked" },
-                { week: "Week 3", title: domain === "ai" ? "Recommendation Engine" : "Credential Stuffing Defense", due: "May 31", status: "locked" },
-              ].map((a, i) => (
-                <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
-                  className={`relative bg-white/5 border rounded-[2rem] p-8 ${a.status === "locked" ? "opacity-40 grayscale" : "border-white/10"}`}>
-                  <div className="flex justify-between items-start mb-6">
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] px-3 py-1 bg-white/5 rounded-full text-gray-400">
-                      {a.week}
-                    </span>
-                    <span className={`text-[10px] font-bold px-3 py-1 rounded-full ${a.status === "pending" ? "bg-yellow-500/20 text-yellow-500" : "bg-white/5 text-gray-500"}`}>
-                      {a.status === "pending" ? "⏳ Pending" : "🔒 Locked"}
-                    </span>
-                  </div>
-                  <h3 className="text-xl font-bold text-white mb-2">{a.title}</h3>
-                  <p className="text-gray-500 text-sm flex items-center gap-2 mb-6"><Calendar className="w-4 h-4" /> Due {a.due}</p>
-                  
-                  {a.status === "pending" && (
-                    <button className="w-full py-4 bg-[#7c3aed] text-white font-bold rounded-2xl hover:shadow-[0_0_20px_rgba(124,58,237,0.4)] transition-all">
-                      Submit Assignment
-                    </button>
-                  )}
-                </motion.div>
-              ))}
-            </div>
-          </div>
+          <AssignmentsTab user={user} domain={domain} />
         )}
 
         {/* ── ACHIEVEMENTS TAB ── */}

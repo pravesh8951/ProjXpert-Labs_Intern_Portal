@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, Suspense } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -103,12 +104,7 @@ function NavbarContent() {
 
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5 group flex-shrink-0">
-            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-600">
-              <Shield className="w-4 h-4 text-white" />
-            </div>
-            <span className="font-bold text-lg text-[var(--text-primary)] tracking-tight">
-              Proj<span className="text-blue-600">X</span>pert
-            </span>
+            <Image src="/logo.png" alt="ProjXpert Labs" width={140} height={32} className="h-8 w-auto object-contain" priority />
           </Link>
 
           {/* Desktop Nav Links */}
