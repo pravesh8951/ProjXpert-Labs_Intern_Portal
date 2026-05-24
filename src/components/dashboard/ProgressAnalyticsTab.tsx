@@ -44,7 +44,7 @@ export default function ProgressAnalyticsTab({ user, courseData, domain }: any) 
   const domainColor = domain === "ai" ? "#60a5fa" : "#c084fc";
 
   // ── Compute live quiz accuracy from dailyQuizScores ──
-  const allScores: { day: number; score: number; total: number }[] = user.dailyQuizScores || [];
+  const allScores: { day: number; score: number; total: number; passed?: boolean; percentage?: number }[] = user.dailyQuizScores || [];
   const liveQuizAcc = allScores.length > 0
     ? Math.round(
         allScores.reduce((sum, s) => sum + (s.total > 0 ? s.score / s.total : 0), 0) /
@@ -55,11 +55,9 @@ export default function ProgressAnalyticsTab({ user, courseData, domain }: any) 
   // ── Weekly bar chart: last 7 quiz days (sorted by day) ──
   const recentQuizzes = [...allScores].sort((a, b) => b.day - a.day).slice(0, 7).reverse();
   const barData: { label: string; score: number }[] = recentQuizzes.map((s) => ({
-    label: `D${s.day}`,
-    score: s.total > 0 ? Math.round((s.score / s.total) * 100) : 0,
+    label: `Day ${s.day}`,
+    score: s.percentage !== undefined ? s.percentage : (s.total > 0 ? Math.round((s.score / s.total) * 100) : (s.passed ? 100 : 0)),
   }));
-  // Pad to 7 bars if fewer
-  while (barData.length < 7) barData.unshift({ label: "—", score: 0 });
 
   // ── XP gained this week (last 7 completed quiz days) ──
   const xpPerQuiz = 10; // same as backend
@@ -107,7 +105,8 @@ export default function ProgressAnalyticsTab({ user, courseData, domain }: any) 
     if (dayEvents.length > 0) {
       events.push({
         day: `Day ${d}`,
-        events: dayEvents
+        events: dayEvents,
+        dayNum: d
       });
     }
   }
@@ -117,10 +116,12 @@ export default function ProgressAnalyticsTab({ user, courseData, domain }: any) 
       day: "Get Started",
       events: [
         { type: "milestone", text: "Started your internship journey! 🚀", done: true }
-      ]
+      ],
+      dayNum: 0
     });
   }
-  const timelineEvents = events.slice(0, 3);
+  // Restrict to ONLY last 2 days of activity
+  const timelineEvents = events.slice(0, 2);
 
   const allWeeks = courseData?.months?.flatMap((m: any) => m.weeks) || [];
   const visibleWeeks = allWeeks.slice(0, planWeeks);
@@ -174,9 +175,9 @@ export default function ProgressAnalyticsTab({ user, courseData, domain }: any) 
           <h3 className="text-lg font-bold text-white flex items-center gap-2">
             <TrendingUp className="w-5 h-5 text-blue-400" /> Weekly Performance Trend
           </h3>
-          <div className="bg-[#0d0f22] border border-white/5 rounded-3xl p-8 shadow-xl">
+          <div className="bg-[#0d0f22] border border-white/5 rounded-3xl p-8 shadow-xl h-full flex flex-col">
             <p className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-6">
-              Quiz Accuracy — Last {barData.filter(b => b.label !== "—").length} Completed Day{barData.filter(b => b.label !== "—").length !== 1 ? "s" : ""}
+              Quiz Accuracy — Last {barData.length} Completed Day{barData.length !== 1 ? "s" : ""}
             </p>
 
             {allScores.length === 0 ? (
@@ -225,7 +226,7 @@ export default function ProgressAnalyticsTab({ user, courseData, domain }: any) 
               </>
             )}
 
-            <div className="mt-8 flex gap-6 border-t border-white/5 pt-6">
+            <div className="mt-auto flex gap-6 border-t border-white/5 pt-6">
               <div>
                 <p className="text-2xl font-black text-white">{assignmentsDone} / {planWeeks}</p>
                 <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Assignments Submitted</p>
@@ -247,8 +248,8 @@ export default function ProgressAnalyticsTab({ user, courseData, domain }: any) 
           <h3 className="text-lg font-bold text-white flex items-center gap-2">
             <Clock className="w-5 h-5 text-purple-400" /> Recent Activity
           </h3>
-          <div className="bg-[#0d0f22] border border-white/5 rounded-3xl p-6 shadow-xl h-full">
-            <div className="relative border-l border-white/10 ml-3 space-y-8 py-2">
+          <div className="bg-[#0d0f22] border border-white/5 rounded-3xl p-6 shadow-xl h-full max-h-[420px] overflow-y-auto custom-scrollbar">
+            <div className="relative border-l border-white/10 ml-3 space-y-8 py-2 pr-2">
               {timelineEvents.map((group, i) => (
                 <div key={i}>
                   <div className="absolute -left-[5px] w-2.5 h-2.5 rounded-full bg-white/20 mt-1" />
@@ -256,7 +257,7 @@ export default function ProgressAnalyticsTab({ user, courseData, domain }: any) 
                     <p className="text-xs font-black text-gray-500 uppercase tracking-wider">{group.day}</p>
                   </div>
                   <div className="pl-6 space-y-4">
-                    {group.events.map((ev, j) => (
+                    {group.events.map((ev: any, j: number) => (
                       <div key={j} className={`p-4 rounded-xl border flex items-center gap-3 transition-all ${
                         ev.done ? "bg-white/5 border-white/5" : "bg-white/[0.02] border-transparent opacity-60"
                       }`}>
@@ -286,9 +287,13 @@ export default function ProgressAnalyticsTab({ user, courseData, domain }: any) 
             const isCurrent = mod.week === Math.ceil(currentDay / 7);
             const isCompleted = mod.week < Math.ceil(currentDay / 7);
 
-            const completedDaysInWeek = mod.days?.filter((d: any) => user.completedDays?.includes(d.day)).length || 0;
-            const completionPct = Math.round((completedDaysInWeek / 7) * 100);
+            const completedReadingsInWeek = mod.days?.filter((d: any) => user.completedReadings?.includes(d.day)).length || 0;
+            const completedQuizzesInWeek = mod.days?.filter((d: any) => user.completedQuizzes?.includes(d.day)).length || 0;
             const isAssignmentSubmitted = user.assignmentsCompleted >= mod.week;
+            
+            const totalTasksInWeek = (mod.days?.length || 7) * 2 + 1; // readings + quizzes + 1 assignment
+            const completedTasksInWeek = completedReadingsInWeek + completedQuizzesInWeek + (isAssignmentSubmitted ? 1 : 0);
+            const completionPct = Math.round((completedTasksInWeek / totalTasksInWeek) * 100);
 
             return (
               <div key={i} className={`p-6 rounded-3xl border transition-all ${
@@ -315,13 +320,13 @@ export default function ProgressAnalyticsTab({ user, courseData, domain }: any) 
                   <div className="flex justify-between items-center text-xs">
                     <span className="text-gray-500 font-medium">Reading Content</span>
                     <span className={isCompleted || isCurrent ? "text-green-400 font-bold" : "text-gray-600"}>
-                      {mod.days?.filter((d: any) => user.completedReadings?.includes(d.day)).length || 0}/7 Days
+                      {completedReadingsInWeek}/{mod.days?.length || 7} Days
                     </span>
                   </div>
                   <div className="flex justify-between items-center text-xs">
                     <span className="text-gray-500 font-medium">Weekly Quizzes</span>
-                    <span className={isCompleted ? "text-white font-bold" : "text-gray-600"}>
-                      {mod.days?.filter((d: any) => user.completedQuizzes?.includes(d.day)).length || 0}/7 Passed
+                    <span className={isCompleted || isCurrent ? "text-white font-bold" : "text-gray-600"}>
+                      {completedQuizzesInWeek}/{mod.days?.length || 7} Passed
                     </span>
                   </div>
                   <div className="flex justify-between items-center text-xs">

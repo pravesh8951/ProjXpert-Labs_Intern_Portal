@@ -124,9 +124,7 @@ export async function POST(req: Request) {
           const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
           const diffDays = Math.round((today.getTime() - prevDay.getTime()) / 86400000);
           if (diffDays <= 1) {
-            // Same day or consecutive day — increment streak
-            if (diffDays === 1) progressDoc.streak += 1;
-            // diffDays === 0 means same day completion, keep streak as is
+            progressDoc.streak += 1;
           } else {
             progressDoc.streak = 1; // Reset if more than 1 day gap
           }
@@ -138,6 +136,7 @@ export async function POST(req: Request) {
         if (!user.currentDay || user.currentDay <= day) {
           user.currentDay = nextDay;
         }
+        user.streak = progressDoc.streak;
         await user.save();
 
         // Unlock next day

@@ -57,7 +57,10 @@ export default function LearningModules({ user, courseData, domain }: { user: an
               <p className="text-gray-400 text-sm font-medium">Keep up the momentum. You're doing great!</p>
             </div>
             
-            <button className={`whitespace-nowrap px-6 py-3 text-white font-bold text-sm rounded-xl transition-all shadow-lg flex items-center gap-2 ${domainAccent}`}>
+            <button 
+              onClick={() => window.location.href = "/dashboard?tab=home&action=continue-learning"}
+              className={`whitespace-nowrap px-6 py-3 text-white font-bold text-sm rounded-xl transition-all shadow-lg flex items-center gap-2 ${domainAccent}`}
+            >
               <Play className="w-4 h-4 fill-current" /> Continue Learning
             </button>
           </div>

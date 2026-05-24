@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   BookOpen, HelpCircle, Headphones, CheckCircle,
@@ -15,14 +14,15 @@ export default function DailyContentHub({
   contentData,
   user,
   courseId,
+  action,
 }: {
   domain: string;
   day: number;
   contentData?: any;
   user?: any;
   courseId?: string;
+  action?: string | null;
 }) {
-  const router = useRouter();
   const [activeTab, setActiveTab] = useState<"reading" | "quiz" | "audio">("reading");
   const [isReaderOpen, setIsReaderOpen] = useState(false);
   const [isQuizOpen, setIsQuizOpen] = useState(false);
@@ -94,6 +94,25 @@ export default function DailyContentHub({
       }
     };
   }, []);
+
+  useEffect(() => {
+    if (action === "continue-learning") {
+      const el = document.getElementById("daily-content-hub");
+      if (el) {
+        setTimeout(() => el.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
+      }
+      if (isCompleted) {
+        if (!user?.completedQuizzes?.includes(day)) {
+          setActiveTab("quiz");
+        } else {
+          setActiveTab("reading");
+        }
+      } else {
+        setActiveTab("reading");
+        setIsReaderOpen(true);
+      }
+    }
+  }, [action, isCompleted, user?.completedQuizzes, day]);
 
   const toggleAudio = () => {
     if (!window.speechSynthesis) return;
@@ -230,7 +249,7 @@ export default function DailyContentHub({
 
   return (
     <>
-      <div className="card overflow-hidden flex flex-col h-full bg-[#0d0f22]/90 border border-white/5">
+      <div id="daily-content-hub" className="card overflow-hidden flex flex-col h-full bg-[#0d0f22]/90 border border-white/5">
         {/* Tab bar */}
         <div className="flex border-b border-white/5 bg-[#0a0a1a]">
           {tabs.map((tab) => (

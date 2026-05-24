@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { Brain, Shield, Flame, Star, Trophy, BookOpen, Clock, CheckCircle, Lock, Zap, Target, Award, BarChart3, Calendar, Upload, Play } from "lucide-react";
 
@@ -88,8 +88,8 @@ function DashboardContent() {
   const [courseData, setCourseData] = useState<any>(null);
   const [authChecked, setAuthChecked] = useState(false);
   const searchParams = useSearchParams();
-  const router = useRouter();
   const tab = searchParams.get("tab") || "home";
+  const action = searchParams.get("action");
   
   const [quoteIdx] = useState(() => Math.floor(Math.random() * quotes.length));
 
@@ -97,9 +97,9 @@ function DashboardContent() {
     const controller = new AbortController();
     fetch("/api/auth/me", { cache: "no-store", signal: controller.signal })
       .then(async (r) => {
-        if (!r.ok) { router.push("/login"); return; }
+        if (!r.ok) { window.location.replace("/login"); return; }
         const d = await r.json();
-        if (!d.user) { router.push("/login"); return; }
+        if (!d.user) { window.location.replace("/login"); return; }
         setUser(d.user);
         setAuthChecked(true);
         
@@ -112,10 +112,10 @@ function DashboardContent() {
         }
       })
       .catch(() => {
-        router.push("/login");
+        window.location.replace("/login");
       });
     return () => controller.abort();
-  }, [router]);
+  }, []);
 
   if (!user) return (
     <div className="min-h-screen bg-[var(--background)] pt-24 px-4 flex flex-col items-center">
@@ -147,6 +147,20 @@ function DashboardContent() {
   
   const totalDays = user.internshipPlan === "3m" ? 90 : user.internshipPlan === "2m" ? 60 : 30;
   const currentDay = user.currentDay ?? 1;
+
+  // Calendar-based day for Live Class — governed by wall-clock time since
+  // registration (Day 1 until midnight of sign-up day, Day 2 the next day…)
+  // so completing reading+quiz early does NOT advance the live class topic.
+  const liveClassDay = (() => {
+    if (!user.createdAt) return currentDay;
+    const regMidnight = new Date(user.createdAt);
+    regMidnight.setHours(0, 0, 0, 0);
+    const todayMidnight = new Date();
+    todayMidnight.setHours(0, 0, 0, 0);
+    const calendarDay = Math.floor((todayMidnight.getTime() - regMidnight.getTime()) / 86400000) + 1;
+    return Math.min(Math.max(calendarDay, 1), totalDays);
+  })();
+
   const xp = user.xp ?? 0;
   const level = Math.floor(xp / 200) + 1;
   const currentLevelXP = xp - (level - 1) * 200;
@@ -249,6 +263,7 @@ function DashboardContent() {
                   contentData={currentDayData}
                   user={user}
                   courseId={courseData?._id}
+                  action={action}
                 />
               </div>
 
@@ -258,7 +273,7 @@ function DashboardContent() {
 
             {/* Right Column: Live Class & Quick Stats (4 cols) */}
             <div className="lg:col-span-4 space-y-8">
-              <LiveClassCard />
+              <LiveClassCard domain={domain} day={liveClassDay} />
               <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}
                 className="bg-white/[0.02] border border-white/5 rounded-2xl p-6">
                 <h3 className="text-white font-extrabold text-sm mb-5 flex items-center gap-2 uppercase tracking-wider">
@@ -290,13 +305,13 @@ function DashboardContent() {
               <div className="space-y-2">
                 <p className="text-[9px] text-gray-500 font-black uppercase tracking-[0.2em] ml-1 mb-3">Quick Actions</p>
                 {[
-                  { label: "Book 1:1 Mentor Session", icon: Calendar, color: "text-purple-400" },
-                  { label: "Community Discord", icon: Trophy, color: "text-blue-400" },
-                  { label: "View Achievement Gallery", icon: Award, color: "text-yellow-400" },
-                ].map((action, i) => (
-                  <button key={i} className="w-full flex items-center gap-3 p-3.5 rounded-xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.05] hover:border-white/10 transition-all text-left">
-                    <action.icon className={`w-4 h-4 ${action.color} flex-shrink-0`} />
-                    <span className="text-xs font-bold text-gray-300">{action.label}</span>
+                  { label: "Join Internship WhatsApp Community", icon: Calendar, color: "text-green-400", url: "#" },
+                  { label: "Join Course Specific WhatsApp Group", icon: Trophy, color: "text-blue-400", url: "#" },
+                  { label: "View Achievement Gallery", icon: Award, color: "text-yellow-400", url: "?tab=achievements" },
+                ].map((actionItem, i) => (
+                  <button key={i} onClick={() => { if (actionItem.url) window.location.href = actionItem.url; }} className="w-full flex items-center gap-3 p-3.5 rounded-xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.05] hover:border-white/10 transition-all text-left">
+                    <actionItem.icon className={`w-4 h-4 ${actionItem.color} flex-shrink-0`} />
+                    <span className="text-xs font-bold text-gray-300">{actionItem.label}</span>
                   </button>
                 ))}
               </div>

@@ -114,8 +114,7 @@ export async function POST(req: Request) {
         const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
         const diffDays = Math.round((today.getTime() - prevDay.getTime()) / 86400000);
         if (diffDays <= 1) {
-          if (diffDays === 1) progressDoc.streak += 1;
-          // diffDays === 0 = same calendar day, keep streak
+          progressDoc.streak += 1;
         } else {
           progressDoc.streak = 1;
         }
@@ -127,6 +126,7 @@ export async function POST(req: Request) {
       if (!user.currentDay || user.currentDay <= day) {
         user.currentDay = nextDay;
       }
+      user.streak = progressDoc.streak;
       await user.save();
 
       // Unlock next day

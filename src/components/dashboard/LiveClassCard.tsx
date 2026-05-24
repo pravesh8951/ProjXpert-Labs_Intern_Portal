@@ -4,9 +4,38 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Clock, Video, PlayCircle, ExternalLink, Users, Radio } from "lucide-react";
 
-export default function LiveClassCard() {
+export default function LiveClassCard({ domain, day }: { domain?: string; day?: number }) {
   const [status, setStatus] = useState<"waiting" | "live" | "recorded">("waiting");
   const [timeLeft, setTimeLeft] = useState("");
+  const [classData, setClassData] = useState<any>(null);
+
+  useEffect(() => {
+    // Fetch live class data
+    const fetchClass = async () => {
+      try {
+        const queryParams = new URLSearchParams();
+        if (domain) queryParams.set("domain", domain);
+        if (day) queryParams.set("day", day.toString());
+        
+        const res = await fetch(`/api/live-classes?${queryParams.toString()}`);
+        if (res.ok) {
+          const data = await res.json();
+          setClassData(data);
+          
+          if (data.recordingLink && data.recordingLink.trim() !== "") {
+            setStatus("recorded");
+          } else if (data.meetingLink && data.meetingLink.trim() !== "") {
+            setStatus("live");
+          } else {
+            setStatus("waiting");
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch live class", err);
+      }
+    };
+    fetchClass();
+  }, [domain, day]);
 
   useEffect(() => {
     const updateStatus = () => {
@@ -79,15 +108,17 @@ export default function LiveClassCard() {
           </div>
           <div>
             <h3 className="text-white font-extrabold text-sm leading-snug">
-              {status === "live" ? "Class is in Progress!" : status === "recorded" ? "Today's Class" : "Next Live Masterclass"}
+              {classData?.title || (status === "live" ? "Class is in Progress!" : status === "recorded" ? "Today's Class" : "Next Live Masterclass")}
             </h3>
-            <p className="text-gray-400 text-xs mt-0.5 leading-relaxed">Advanced Cybersecurity Concepts · Live Q&A</p>
+            <p className="text-gray-400 text-xs mt-0.5 leading-relaxed">{classData?.liveClassTopic || "Advanced Cybersecurity Concepts · Live Q&A"}</p>
           </div>
         </div>
 
         <div className="flex items-center gap-2.5 mb-4">
-          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center text-white text-[10px] font-black">R</div>
-          <span className="text-xs text-gray-300 font-semibold">Instructor Rahul Sharma</span>
+          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center text-white text-[10px] font-black">
+            {classData?.instructor ? classData.instructor[0].toUpperCase() : "P"}
+          </div>
+          <span className="text-xs text-gray-300 font-semibold">Instructor {classData?.instructor || "Pravesh Dubey"}</span>
         </div>
 
         <AnimatePresence mode="wait">
@@ -113,7 +144,7 @@ export default function LiveClassCard() {
                 <span>142 students joined</span>
               </div>
               <button
-                onClick={() => window.open("https://meet.google.com/xyz-abc-123", "_blank")}
+                onClick={() => window.open(classData?.meetingLink || "https://meet.google.com/xyz-abc-123", "_blank")}
                 className="w-full py-3 bg-red-600 hover:bg-red-500 text-white text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-2 shadow-lg shadow-red-600/15"
               >
                 <Video className="w-4 h-4" /> Join Class Now <ExternalLink className="w-3.5 h-3.5" />
@@ -124,7 +155,10 @@ export default function LiveClassCard() {
           {status === "recorded" && (
             <motion.div key="recorded" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-3">
               <p className="text-xs text-gray-400">Class ended. Recording is available.</p>
-              <button className="w-full py-3 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-2 border border-blue-500/20">
+              <button 
+                onClick={() => window.open(classData?.recordingLink || "#", "_blank")}
+                className="w-full py-3 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-2 border border-blue-500/20"
+              >
                 <PlayCircle className="w-4 h-4" /> Watch Recording
               </button>
             </motion.div>

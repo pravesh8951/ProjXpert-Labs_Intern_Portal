@@ -18,7 +18,7 @@ export async function GET() {
     await connectToDatabase();
 
     const user = await User.findById(decoded.id).select(
-      "name email role testStatus paymentStatus domain xp level streak badges currentDay assignmentsCompleted quizAccuracy internshipPlan unlockedDays completedDays completedReadings completedQuizzes dailyQuizScores totalProgress lastActiveDate"
+      "name email role testStatus paymentStatus domain xp level streak badges currentDay assignmentsCompleted quizAccuracy internshipPlan unlockedDays completedDays completedReadings completedQuizzes dailyQuizScores totalProgress lastActiveDate createdAt"
     );
     if (!user) {
       return NextResponse.json({ user: null }, { status: 200 });
@@ -119,6 +119,7 @@ export async function GET() {
         assignmentsCompleted: user.assignmentsCompleted,
         quizAccuracy: user.quizAccuracy,
         totalProgress: user.totalProgress ?? 0,
+        createdAt: user.createdAt,
 
         // currentDay: derived from completed days so it's always accurate
         currentDay: progressDoc
