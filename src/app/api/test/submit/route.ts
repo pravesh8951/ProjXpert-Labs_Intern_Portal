@@ -50,7 +50,9 @@ export async function POST(req: Request) {
     // Send congratulations email if passed
     if (passed) {
       try {
-        await sendTestPassedEmail(user.email, user.name);
+        const requestUrl = new URL(req.url);
+        const baseUrl = `${requestUrl.protocol}//${requestUrl.host}`;
+        await sendTestPassedEmail(user.email, user.name, baseUrl);
       } catch (emailErr) {
         console.error("Failed to send congratulations email:", emailErr);
       }

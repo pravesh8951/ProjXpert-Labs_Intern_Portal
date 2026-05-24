@@ -72,7 +72,7 @@ export const sendScheduleTestEmail = async (email: string, name: string, schedul
   await transporter.sendMail(mailOptions);
 };
 
-export const sendTestPassedEmail = async (email: string, name: string) => {
+export const sendTestPassedEmail = async (email: string, name: string, baseUrl: string) => {
   const mailOptions = {
     from: `"ProjXpert Labs" <${process.env.NODEMAILER_USER}>`,
     to: email,
@@ -83,7 +83,7 @@ export const sendTestPassedEmail = async (email: string, name: string) => {
         <p style="color: #e2e8f0; font-size: 16px;">You have successfully passed the eligibility test and are now selected for the ProjXpert Labs Internship Program!</p>
         <p style="color: #e2e8f0; font-size: 16px;">The next step is to choose your internship plan and complete your enrollment.</p>
         <div style="text-align: center; margin: 30px 0;">
-          <a href="${process.env.NEXTAUTH_URL || 'http://localhost:3001'}/plans" style="background-color: #7c3aed; color: #ffffff; padding: 14px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px;">Choose Your Plan</a>
+          <a href="${baseUrl}/plans" style="background-color: #7c3aed; color: #ffffff; padding: 14px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px;">Choose Your Plan</a>
         </div>
         <p style="color: #94a3b8; font-size: 14px; text-align: center;">Welcome to ProjXpert Labs! We're excited to have you onboard 🚀</p>
       </div>

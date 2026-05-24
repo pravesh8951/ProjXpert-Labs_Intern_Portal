@@ -21,7 +21,9 @@ export async function POST(req: Request) {
     user.scheduledTestDate = new Date(scheduledDate);
     await user.save();
 
-    const testUrl = `${process.env.NEXTAUTH_URL || "http://localhost:3001"}/test?start=true`;
+    const requestUrl = new URL(req.url);
+    const origin = `${requestUrl.protocol}//${requestUrl.host}`;
+    const testUrl = `${origin}/test?start=true`;
     const formattedDate = new Date(scheduledDate).toLocaleString("en-IN", {
       dateStyle: "full",
       timeStyle: "short",
