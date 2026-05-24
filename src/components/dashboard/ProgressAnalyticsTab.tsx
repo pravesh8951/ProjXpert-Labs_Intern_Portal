@@ -195,7 +195,7 @@ export default function ProgressAnalyticsTab({ user, courseData, domain }: any) 
                   <div className="absolute left-0 right-0 top-0 h-px bg-white/5" />
 
                   {barData.map((bar, i) => (
-                    <div key={i} className="flex-1 flex flex-col items-center group relative z-10">
+                    <div key={i} className="flex-1 h-full flex flex-col justify-end items-center group relative z-10">
                       <motion.div
                         initial={{ height: 0 }}
                         animate={{ height: bar.score > 0 ? `${bar.score}%` : "4px" }}
