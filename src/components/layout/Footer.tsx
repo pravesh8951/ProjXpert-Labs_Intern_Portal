@@ -56,7 +56,7 @@ export default function Footer() {
                 projxpertlabs@gmail.com
               </li>
               <li className="text-[var(--text-secondary)] text-sm">
-                Maria Plaza, Frazer town ,<br />
+                Frazer Town,<br />
                 Bangalore 560005
               </li>
             </ul>

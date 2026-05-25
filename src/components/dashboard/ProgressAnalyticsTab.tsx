@@ -39,7 +39,7 @@ export default function ProgressAnalyticsTab({ user, courseData, domain }: any) 
   const currentDay = user.unlockedDays?.length > 0 ? Math.max(...user.unlockedDays) : (user.currentDay ?? 1);
   const assignmentsDone = user.assignmentsCompleted ?? 0;
   const xp = user.xp ?? 0;
-  const streak = user.streak ?? 1;
+  const streak = Math.max(currentDay - 1, 0);
 
   const domainColor = domain === "ai" ? "#60a5fa" : "#c084fc";
 
@@ -248,7 +248,7 @@ export default function ProgressAnalyticsTab({ user, courseData, domain }: any) 
           <h3 className="text-lg font-bold text-white flex items-center gap-2">
             <Clock className="w-5 h-5 text-purple-400" /> Recent Activity
           </h3>
-          <div className="bg-[#0d0f22] border border-white/5 rounded-3xl p-6 shadow-xl h-full max-h-[420px] overflow-y-auto custom-scrollbar">
+          <div className="bg-[#0d0f22] border border-white/5 rounded-3xl p-6 shadow-xl h-full overflow-y-auto custom-scrollbar">
             <div className="relative border-l border-white/10 ml-3 space-y-8 py-2 pr-2">
               {timelineEvents.map((group, i) => (
                 <div key={i}>

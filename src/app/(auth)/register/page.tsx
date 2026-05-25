@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
-import { User, Mail, Phone, Building, Lock, ShieldCheck, ArrowRight, Loader2 } from "lucide-react";
+import { User, Mail, Phone, Building, Lock, ShieldCheck, ArrowRight, Loader2, Check, X } from "lucide-react";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -28,8 +28,22 @@ export default function RegisterPage() {
     setError("");
   };
 
+  const passwordChecks = useMemo(() => ({
+    hasUpper: /[A-Z]/.test(formData.password),
+    hasLower: /[a-z]/.test(formData.password),
+    hasNumber: /[0-9]/.test(formData.password),
+    hasSpecial: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(formData.password),
+    hasMinLength: formData.password.length >= 8,
+  }), [formData.password]);
+
+  const isPasswordStrong = Object.values(passwordChecks).every(Boolean);
+
   const handleSendOTP = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isPasswordStrong) {
+      setError("Password must contain at least 8 characters, including uppercase, lowercase, number, and special character.");
+      return;
+    }
     if (formData.password !== formData.confirmPassword) {
       setError("Passwords do not match");
       return;
@@ -166,6 +180,26 @@ export default function RegisterPage() {
                     />
                   </div>
                 </div>
+
+                {/* Password strength checklist */}
+                {formData.password.length > 0 && (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1.5 px-1">
+                    {[
+                      { met: passwordChecks.hasMinLength, label: "8+ characters" },
+                      { met: passwordChecks.hasUpper, label: "Uppercase (A-Z)" },
+                      { met: passwordChecks.hasLower, label: "Lowercase (a-z)" },
+                      { met: passwordChecks.hasNumber, label: "Number (0-9)" },
+                      { met: passwordChecks.hasSpecial, label: "Special (!@#...)" },
+                    ].map((rule) => (
+                      <div key={rule.label} className={`flex items-center gap-1.5 text-[11px] font-medium transition-colors ${
+                        rule.met ? "text-green-400" : "text-gray-500"
+                      }`}>
+                        {rule.met ? <Check className="w-3 h-3 shrink-0" /> : <X className="w-3 h-3 shrink-0" />}
+                        {rule.label}
+                      </div>
+                    ))}
+                  </div>
+                )}
 
                 <button
                   type="submit" disabled={isLoading}

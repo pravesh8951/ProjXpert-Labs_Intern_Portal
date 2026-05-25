@@ -94,6 +94,7 @@ export default function DashboardPage() {
 function DashboardContent() {
   const [user, setUser] = useState<any>(null);
   const [courseData, setCourseData] = useState<any>(null);
+  const [dayContentData, setDayContentData] = useState<any>(null);
   const [authChecked, setAuthChecked] = useState(false);
   const searchParams = useSearchParams();
   const tab = searchParams.get("tab") || "home";
@@ -113,10 +114,20 @@ function DashboardContent() {
         
         // Fetch Course Data from DB
         const domain = d.user.domain || "cybersecurity";
-        const cRes = await fetch(`/api/courses?domain=${domain}`);
+        const userDay = d.user.currentDay ?? 1;
+
+        // Fetch full course structure (for roadmap/modules) and today's specific content in parallel
+        const [cRes, dayRes] = await Promise.all([
+          fetch(`/api/courses?domain=${domain}`),
+          fetch(`/api/courses/day-content?domain=${domain}&day=${userDay}`),
+        ]);
         if (cRes.ok) {
           const courses = await cRes.json();
           if (courses.length > 0) setCourseData(courses[0]);
+        }
+        if (dayRes.ok) {
+          const dayData = await dayRes.json();
+          if (dayData && !dayData.error) setDayContentData(dayData);
         }
       })
       .catch(() => {
@@ -149,9 +160,11 @@ function DashboardContent() {
     week: w.week
   })) : (domain === "ai" ? roadmapAI : roadmapCyber);
 
-  // Find Today's specific content
+  // Find Today's specific content — prefer the targeted day-content API (always has full data)
+  // Fall back to extracting from the full course doc if available
   const currentWeekObj = allWeeks.find((w: any) => w.week === Math.ceil(user.currentDay / 7));
-  const currentDayData = currentWeekObj?.days?.find((d: any) => d.day === user.currentDay);
+  const currentDayFromCourse = currentWeekObj?.days?.find((d: any) => d.day === user.currentDay);
+  const currentDayData = dayContentData || currentDayFromCourse;
   
   const totalDays = user.internshipPlan === "3m" ? 90 : user.internshipPlan === "2m" ? 60 : 30;
   const currentDay = user.currentDay ?? 1;
@@ -173,7 +186,7 @@ function DashboardContent() {
   const level = Math.floor(xp / 200) + 1;
   const currentLevelXP = xp - (level - 1) * 200;
   const nextLevelXP = 200;
-  const streak = user.streak ?? 1;
+  const streak = Math.max(currentDay - 1, 0);
   const assignmentsDone = user.assignmentsCompleted ?? 0;
   const quizAcc = user.quizAccuracy ?? 0;
   const earnedBadges = user.badges ?? [];

@@ -31,8 +31,7 @@ export default function ContactPage() {
               </div>
               <div>
                 <p className="font-bold text-white text-sm">Our Office</p>
-                <p className="text-sm mt-1">Maria Plaza, Frazer town</p>
-                <p className="text-sm">Bangalore 560005</p>
+                <p className="text-sm mt-1">Frazer Town, Bangalore 560005</p>
               </div>
             </div>
           </div>

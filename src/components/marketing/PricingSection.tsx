@@ -15,7 +15,6 @@ export default function PricingSection() {
         "Daily structured learning sprint content",
         "Interactive mini quizzes & code checks",
         "1 Core portfolio-ready project submission",
-        "Discord group peer support channel",
         "Verifiable Internship Certificate"
       ],
       popular: false,
@@ -67,10 +66,10 @@ export default function PricingSection() {
       <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-purple-500/5 rounded-full blur-[140px] pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        
+
         {/* Section Header */}
         <div className="text-center mb-20">
-          <motion.h2 
+          <motion.h2
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -78,7 +77,7 @@ export default function PricingSection() {
           >
             Invest In Your <span className="text-gradient">Tech Career</span>
           </motion.h2>
-          <motion.p 
+          <motion.p
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -108,13 +107,13 @@ export default function PricingSection() {
                   </span>
                 </div>
               )}
-              
+
               <div>
                 <div className="mb-6">
                   <h3 className="text-lg font-bold text-[var(--text-primary)] mb-2">{plan.name}</h3>
                   <p className="text-[var(--text-secondary)] text-xs leading-normal h-8">{plan.description}</p>
                 </div>
-                
+
                 <div className="mb-8 border-b border-white/5 pb-6">
                   <div className="flex items-baseline text-[var(--text-primary)]">
                     <span className="text-2xl font-bold">₹</span>
@@ -122,7 +121,7 @@ export default function PricingSection() {
                     <span className="text-gray-500 text-xs ml-1.5 font-mono">{plan.duration}</span>
                   </div>
                 </div>
-                
+
                 <ul className="space-y-4 mb-8">
                   {plan.features.map((feature, i) => (
                     <li key={i} className="flex items-start gap-3">
@@ -132,7 +131,7 @@ export default function PricingSection() {
                   ))}
                 </ul>
               </div>
-              
+
               <Link
                 href="/register"
                 className={`w-full py-3.5 rounded-xl text-center text-xs font-bold transition-all duration-200 border border-white/5 ${plan.buttonColor}`}

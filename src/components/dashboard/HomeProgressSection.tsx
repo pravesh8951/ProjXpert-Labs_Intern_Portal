@@ -26,7 +26,7 @@ export default function HomeProgressSection({ user, domain }: { user: any, domai
   const level = Math.floor(xp / 200) + 1;
   const currentLevelXP = xp - (level - 1) * 200;
   const nextLevelXP = 200;
-  const streak = user.streak ?? 1;
+  const streak = Math.max((user.currentDay ?? 1) - 1, 0);
   const { name: tierName, color: tierColor } = getLevelTier(level);
   const streakMsg = getStreakMessage(streak);
 
