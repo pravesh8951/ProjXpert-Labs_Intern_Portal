@@ -7,8 +7,9 @@ import Footer from "@/components/layout/Footer";
 const poppins = Poppins({ subsets: ["latin"], weight: ["400", "500", "600", "700", "800", "900"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
-  title: "ProjXpert Labs - Futuristic AI & Cybersecurity Internships",
-  description: "Industry-focused AI & Cybersecurity internships with real-world projects, live mentoring, and hands-on learning.",
+  title: "ProjXpert Labs | AI & Cybersecurity Internships",
+  description: "ProjXpert Labs provides AI, Cybersecurity and project-based internships with real-world learning.",
+  keywords: "ProjXpert Labs, AI Internship, Cybersecurity Internship, Tech Training, Project Based Learning",
 };
 
 export default function RootLayout({
